@@ -1,14 +1,12 @@
+# builder 阶段始终运行在构建机原生平台（amd64），用 Go 交叉编译目标平台二进制
 FROM --platform=$BUILDPLATFORM golang:1.23-alpine AS builder
 ARG TARGETOS
 ARG TARGETARCH
 WORKDIR /app
 COPY go.mod go.sum ./
-RUN --mount=type=cache,target=/go/pkg/mod,id=gomod \
-    go mod download
+RUN go mod download
 COPY . .
-RUN --mount=type=cache,target=/go/pkg/mod,id=gomod \
-    --mount=type=cache,target=/root/.cache/go-build,id=gobuild \
-    CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -o kiro-go .
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -o kiro-go .
 
 FROM alpine:latest
 RUN apk --no-cache add ca-certificates
